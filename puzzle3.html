@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Puzzle 3</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Puzzle 3</h1>
+  <p>The more you take, the more you leave behind. What am I?</p>
+
+  <input id="answer" type="text" placeholder="Your answer">
+  <button onclick="checkAnswer()">Submit</button>
+  <p id="feedback"></p>
+
+  <script>
+    function checkAnswer() {
+      const input = document.getElementById("answer").value.toLowerCase().trim();
+      if (input === "footsteps") {
+        window.location.href = "complete.html";
+      } else {
+        document.getElementById("feedback").textContent = "❌ Try again.";
+      }
+    }
+  </script>
+</body>
+</html>
