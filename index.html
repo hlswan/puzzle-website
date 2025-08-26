@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Title</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Puzzle 1</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Hello, World!</h1>
-    <p>This is a basic HTML template.</p>
-    <script src="script.js"></script>
+  <h1>Puzzle 1</h1>
+  <p>I speak without a mouth and hear without ears. What am I?</p>
+
+  <input id="answer" type="text" placeholder="Your answer">
+  <button onclick="checkAnswer()">Submit</button>
+  <p id="feedback"></p>
+
+  <script>
+    function checkAnswer() {
+      const input = document.getElementById("answer").value.toLowerCase().trim();
+      if (input === "echo") {
+        window.location.href = "puzzle2.html";
+      } else {
+        document.getElementById("feedback").textContent = "❌ Try again.";
+      }
+    }
+  </script>
 </body>
 </html>
