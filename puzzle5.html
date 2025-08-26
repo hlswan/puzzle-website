@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Puzzle 5</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Puzzle 5</h1>
+
+    <p class="clue">
+Now for you
+Far away kid
+Here’s something you might find fun
+Can you remember the song
+You sang as not one
+In that night in the forest
+Gosh how that changed us
+Too easy? I know
+What's the fifth line?
+    </p>
+
+    <div class="input-row">
+      <input id="answer" type="text" placeholder="Your answer">
+      <button id="submitBtn">Submit</button>
+    </div>
+
+    <div id="feedback" class="feedback small"></div>
+
+    <div class="reveal">
+      <strong>Progress:</strong>
+      <div id="progressText" style="margin-top:8px;font-family:monospace;"></div>
+    </div>
+
+    <button class="reset small reset" id="resetBtn">Reset progress (for testing)</button>
+  </div>
+
+  <script>
+    const correctHash = "537694f6e2d3b5714207f65114caa9782059d89cd99f43bd379fa228fb608665";
+    const chunk = "September"; // chunk for puzzle 5 (month)
+    const nextPage = "puzzle6.html";
+
+    async function sha256Hex(message) {
+      const msgUint8 = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function showProgress() {
+      const revealed = JSON.parse(localStorage.getItem("revealChunks") || "[]");
+      const display = revealed.join("") || "[ nothing revealed yet ]";
+      document.getElementById("progressText").textContent = display;
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const raw = document.getElementById("answer").value;
+      const normalized = raw.trim().toLowerCase();
+      const h = await sha256Hex(normalized);
+      const fb = document.getElementById("feedback");
+      if (h === correctHash) {
+        fb.textContent = "✅ Correct! Unlocking next piece...";
+        const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
+        if (arr.length < 5) { arr.push(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
+        setTimeout(() => window.location.href = nextPage, 700);
+      } else {
+        fb.textContent = "❌ Try again.";
+      }
+      showProgress();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem("revealChunks");
+      showProgress();
+      document.getElementById("feedback").textContent = "Progress reset.";
+    });
+
+    showProgress();
+  </script>
+</body>
+</html>
