@@ -1,27 +1,81 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>Puzzle 3</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Puzzle 3</h1>
-  <p>The more you take, the more you leave behind. What am I?</p>
+  <div class="container">
+    <h1>Puzzle 3</h1>
 
-  <input id="answer" type="text" placeholder="Your answer">
-  <button onclick="checkAnswer()">Submit</button>
-  <p id="feedback"></p>
+    <p class="clue">
+Now this one's for your thoughts
+You grand shining ray
+Can you tell me what I got
+On the final that day?
+In the class that we hated
+Oh I felt so elated
+We, almost died for that A
+    </p>
+
+    <div class="input-row">
+      <input id="answer" type="text" placeholder="Your answer">
+      <button id="submitBtn">Submit</button>
+    </div>
+
+    <div id="feedback" class="feedback small"></div>
+
+    <div class="reveal">
+      <strong>Progress:</strong>
+      <div id="progressText" style="margin-top:8px;font-family:monospace;"></div>
+    </div>
+
+    <button class="reset small reset" id="resetBtn">Reset progress (for testing)</button>
+  </div>
 
   <script>
-    function checkAnswer() {
-      const input = document.getElementById("answer").value.toLowerCase().trim();
-      if (input === "footsteps") {
-        window.location.href = "complete.html";
-      } else {
-        document.getElementById("feedback").textContent = "❌ Try again.";
-      }
+    const correctHash = "d6d824abba4afde81129c71dea75b8100e96338da5f416d2f69088f1960cb091";
+    const chunk = " PM"; // chunk for puzzle 3
+    const nextPage = "puzzle4.html";
+
+    async function sha256Hex(message) {
+      const msgUint8 = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
     }
+
+    function showProgress() {
+      const revealed = JSON.parse(localStorage.getItem("revealChunks") || "[]");
+      const display = revealed.join("") || "[ nothing revealed yet ]";
+      document.getElementById("progressText").textContent = display;
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const raw = document.getElementById("answer").value;
+      const normalized = raw.trim().toLowerCase();
+      const h = await sha256Hex(normalized);
+      const fb = document.getElementById("feedback");
+      if (h === correctHash) {
+        fb.textContent = "✅ Correct! Unlocking next piece...";
+        const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
+        if (arr.length < 3) { arr.push(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
+        setTimeout(() => window.location.href = nextPage, 700);
+      } else {
+        fb.textContent = "❌ Try again.";
+      }
+      showProgress();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem("revealChunks");
+      showProgress();
+      document.getElementById("feedback").textContent = "Progress reset.";
+    });
+
+    showProgress();
   </script>
 </body>
 </html>
