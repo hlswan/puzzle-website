@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Puzzle 7</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Puzzle 7 — Finale</h1>
+
+    <p class="clue">
+And now the finale
+You’ve made it quite far
+But the answer that’s here
+Is one you might not know 
+I fear
+It's a sad little story
+Of a sad little thing
+That happened quite long ago
+ (I need a min)
+Can you tell me the name?
+I really need to know
+Of the dog that I lost
+And you just might be ready to go
+She was kind
+She was sweet
+And a kinda bit white
+If you ate the verisimilar
+It might give you a fright
+I'll say it again
+She was golden brown
+Also used to bake cookies
+For those all around town
+    </p>
+
+    <div class="input-row">
+      <input id="answer" type="text" placeholder="Your answer">
+      <button id="submitBtn">Submit</button>
+    </div>
+
+    <div id="feedback" class="feedback small"></div>
+
+    <div class="reveal">
+      <strong>Progress:</strong>
+      <div id="progressText" style="margin-top:8px;font-family:monospace;"></div>
+    </div>
+
+    <button class="reset small reset" id="resetBtn">Reset progress (for testing)</button>
+  </div>
+
+  <script>
+    const correctHash = "cc767fb1c6efc232caf9dd1f6e853d853b58ddd2c058c8820320e69d755c18fb";
+    const chunk = ", 2025"; // final chunk (year)
+    const nextPage = "complete.html";
+
+    async function sha256Hex(message) {
+      const msgUint8 = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function showProgress() {
+      const revealed = JSON.parse(localStorage.getItem("revealChunks") || "[]");
+      const display = revealed.join("") || "[ nothing revealed yet ]";
+      document.getElementById("progressText").textContent = display;
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const raw = document.getElementById("answer").value;
+      const normalized = raw.trim().toLowerCase();
+      const h = await sha256Hex(normalized);
+      const fb = document.getElementById("feedback");
+      if (h === correctHash) {
+        fb.textContent = "✅ Correct! Unlocking final piece...";
+        const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
+        if (arr.length < 7) { arr.push(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
+        setTimeout(() => window.location.href = nextPage, 700);
+      } else {
+        fb.textContent = "❌ Try again.";
+      }
+      showProgress();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem("revealChunks");
+      showProgress();
+      document.getElementById("feedback").textContent = "Progress reset.";
+    });
+
+    showProgress();
+  </script>
+</body>
+</html>
