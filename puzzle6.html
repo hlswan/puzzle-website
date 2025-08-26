@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Puzzle 6</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Puzzle 6</h1>
+
+    <p class="clue">
+Ahhhh now looky here,
+You’ll need a smart one I fear
+For only he knows
+What happens if (oh dear!)
+int a = 0010;
+int b = 0011;
+int i = a * b - (a+b);
+int[] numbers = new int[i];
+numbers[0011] = 0101;
+System.out.println(numbers[0011]);
+    </p>
+
+    <div class="input-row">
+      <input id="answer" type="text" placeholder="Your answer">
+      <button id="submitBtn">Submit</button>
+    </div>
+
+    <div id="feedback" class="feedback small"></div>
+
+    <div class="reveal">
+      <strong>Progress:</strong>
+      <div id="progressText" style="margin-top:8px;font-family:monospace;"></div>
+    </div>
+
+    <button class="reset small reset" id="resetBtn">Reset progress (for testing)</button>
+  </div>
+
+  <script>
+    const correctHash = "d2f6cd1b7464e3af281c291425ceea14e470b17f68acb6306e563ecc40eed690";
+    const chunk = " 5"; // chunk for puzzle 6 (day)
+    const nextPage = "puzzle7.html";
+
+    async function sha256Hex(message) {
+      const msgUint8 = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function showProgress() {
+      const revealed = JSON.parse(localStorage.getItem("revealChunks") || "[]");
+      const display = revealed.join("") || "[ nothing revealed yet ]";
+      document.getElementById("progressText").textContent = display;
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const raw = document.getElementById("answer").value;
+      const normalized = raw.trim().toLowerCase();
+      const h = await sha256Hex(normalized);
+      const fb = document.getElementById("feedback");
+      if (h === correctHash) {
+        fb.textContent = "✅ Correct! Unlocking next piece...";
+        const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
+        if (arr.length < 6) { arr.push(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
+        setTimeout(() => window.location.href = nextPage, 700);
+      } else {
+        fb.textContent = "❌ Try again.";
+      }
+      showProgress();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem("revealChunks");
+      showProgress();
+      document.getElementById("feedback").textContent = "Progress reset.";
+    });
+
+    showProgress();
+  </script>
+</body>
+</html>
