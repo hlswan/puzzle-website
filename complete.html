@@ -30,11 +30,11 @@
         box.textContent = arr.join("") || "[ nothing revealed yet ]";
         note.textContent = "Solve all puzzles to reveal the full meetup details.";
       } else {
-        // Final message — only shown if all 7 chunks are present
-        const full = arr.join(""); // should equal "8:07 PM, September 5, 2025"
+        const full = arr.join("").trim(); // join and trim any accidental edges
         box.textContent = "🎉 " + full + " 🎉";
         note.textContent = "That's the exact meetup time & date — share it with your friends!";
       }
+
     }
 
     document.getElementById("resetBtn").addEventListener("click", () => {
