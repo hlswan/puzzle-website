@@ -65,7 +65,10 @@ With little
       if (h === correctHash) {
         fb.textContent = "✅ Correct! Unlocking next piece...";
         const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
-        if (arr.length < 4) { arr.push(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
+        if (!arr.includes(chunk)) { // prevent duplicates
+          arr.unshift(chunk); 
+          localStorage.setItem("revealChunks", JSON.stringify(arr));
+        }
         setTimeout(() => window.location.href = nextPage, 700);
       } else {
         fb.textContent = "❌ Try again.";
