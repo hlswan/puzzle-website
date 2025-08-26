@@ -6,22 +6,12 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Puzzle 1</h1>
-  <p>I speak without a mouth and hear without ears. What am I?</p>
+  <h1>Rules</h1>
+  <p>Try not to use the internet unless you are stuck. Don't look up this website on GitHub(Stellan!) cause it will ruin it.</p>
 
-  <input id="answer" type="text" placeholder="Your answer">
-  <button onclick="checkAnswer()">Submit</button>
-  <p id="feedback"></p>
-
-  <script>
-    function checkAnswer() {
-      const input = document.getElementById("answer").value.toLowerCase().trim();
-      if (input === "echo") {
-        window.location.href = "puzzle2.html";
-      } else {
-        document.getElementById("feedback").textContent = "❌ Try again.";
-      }
-    }
-  </script>
+  <div style="margin-top:18px;">
+      <a href="puzzle1.html"><button>Start Puzzle 1</button></a>
+    </div>
+  
 </body>
 </html>
