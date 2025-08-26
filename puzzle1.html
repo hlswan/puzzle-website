@@ -82,6 +82,46 @@ And the looooong Wednesdays
 
     // show progress on load
     showProgress();
+
+    // HINT helper (paste into the page's <script> area)
+    const attemptsKey = "attempts_" + (location.pathname.split("/").pop().replace(".html","") || "puzzle"); // unique per page
+    const HINT_THRESHOLD = 3; // number of wrong tries before auto-show
+    
+    function getAttempts() {
+      return parseInt(sessionStorage.getItem(attemptsKey) || "0", 10);
+    }
+    function setAttempts(n) {
+      sessionStorage.setItem(attemptsKey, String(n));
+    }
+    function incrementAttempts() {
+      const n = getAttempts() + 1;
+      setAttempts(n);
+      if (n >= HINT_THRESHOLD) showHint();
+      // optional: display attempts in feedback area (uncomment if desired)
+      // document.getElementById("feedback").textContent += `  (attempts: ${n})`;
+    }
+    
+    function showHint() {
+      const btn = document.getElementById("hintBtn");
+      const box = document.getElementById("hintBox");
+      if (!box || !btn) return;
+      box.style.display = "block";
+      btn.textContent = "Hide Hint";
+    }
+    function hideHint() {
+      const btn = document.getElementById("hintBtn");
+      const box = document.getElementById("hintBox");
+      if (!box || !btn) return;
+      box.style.display = "none";
+      btn.textContent = "Show Hint";
+    }
+    
+    document.getElementById("hintBtn").addEventListener("click", () => {
+      const box = document.getElementById("hintBox");
+      if (box.style.display === "none" || !box.style.display) showHint();
+      else hideHint();
+    });
+
   </script>
 </body>
 </html>
