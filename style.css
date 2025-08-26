@@ -71,6 +71,7 @@ button {
   background: rgba(255,255,255,0.02);
   border-radius: 8px;
   font-family: monospace;
+  white-space: pre-wrap; /* ← preserve leading spaces and line breaks */
 }
 
 .small {
