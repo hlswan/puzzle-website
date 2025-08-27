@@ -27,103 +27,72 @@ We, almost died for that A
 
     <div id="feedback" class="feedback small"></div>
 
+    <!-- HINT UI -->
     <div style="margin-top:10px;">
       <button id="hintBtn" class="small">Show Hint</button>
     </div>
-
     <div id="hintBox" class="reveal" style="display:none; margin-top:8px;">
       <div id="hint-content">
-        I did text it to you.
+        <!-- Put your hint text for puzzle 3 here -->
+         I texted you it.
       </div>
     </div>
-    
+
     <div class="reveal">
       <strong>Progress:</strong>
       <div id="progressText" style="margin-top:8px;font-family:monospace;"></div>
     </div>
 
-    <button class="reset small reset" id="resetBtn">Reset progress (for testing)</button>
+    <button class="reset small reset" id="resetBtn">Reset progress (testing)</button>
   </div>
 
   <script>
-    const correctHash = "d6d824abba4afde81129c71dea75b8100e96338da5f416d2f69088f1960cb091";
-    const chunk = "mber";
-    const nextPage = "puzzle44.html";
+    const expectedNormalized = "97".trim().toLowerCase().replace(/\s+/g, "");
+    const chunk = " September";
+    const nextPage = "puzzle4.html";
 
-    async function sha256Hex(message) {
-      const msgUint8 = new TextEncoder().encode(message);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-    }
+    const attemptsKey = "attempts_puzzle3";
+    const HINT_THRESHOLD = 3;
+    function getAttempts(){ return parseInt(sessionStorage.getItem(attemptsKey) || "0", 10); }
+    function setAttempts(n){ sessionStorage.setItem(attemptsKey, String(n)); }
+    function incrementAttempts(){ const n = getAttempts()+1; setAttempts(n); if(n>=HINT_THRESHOLD) showHint(); }
+    function showHint(){ const btn=document.getElementById("hintBtn"), box=document.getElementById("hintBox"); if(!box||!btn) return; box.style.display="block"; btn.textContent="Hide Hint"; }
+    function hideHint(){ const btn=document.getElementById("hintBtn"), box=document.getElementById("hintBox"); if(!box||!btn) return; box.style.display="none"; btn.textContent="Show Hint"; }
+    document.getElementById("hintBtn").addEventListener("click", () => {
+      const box = document.getElementById("hintBox");
+      if (box.style.display === "none" || !box.style.display) showHint();
+      else hideHint();
+    });
+    if (getAttempts() >= HINT_THRESHOLD) showHint();
 
-    function showProgress() {
+    function normalize(s){ return s.trim().toLowerCase().replace(/\s+/g, ""); }
+    function showProgress(){
       const revealed = JSON.parse(localStorage.getItem("revealChunks") || "[]");
       const display = revealed.join("") || "[ nothing revealed yet ]";
       document.getElementById("progressText").textContent = display;
     }
 
-    document.getElementById("submitBtn").addEventListener("click", async () => {
-      const raw = document.getElementById("answer").value;
-      const normalized = raw.trim().toLowerCase();
-      const h = await sha256Hex(normalized);
+    document.getElementById("submitBtn").addEventListener("click", () => {
+      const raw = document.getElementById("answer").value || "";
+      const norm = normalize(raw);
       const fb = document.getElementById("feedback");
-      if (h === correctHash) {
+      if (norm === expectedNormalized) {
         fb.textContent = "✅ Correct! Unlocking next piece...";
         const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
-        if (!arr.includes(chunk)) {
-          arr.unshift(chunk); 
-          localStorage.setItem("revealChunks", JSON.stringify(arr));
-        }
-        setTimeout(() => window.location.href = nextPage, 700);
+        if (!arr.includes(chunk)) { arr.unshift(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
+        setTimeout(()=> window.location.href = nextPage, 700);
       } else {
         fb.textContent = "❌ Try again.";
+        incrementAttempts();
       }
       showProgress();
     });
 
     document.getElementById("resetBtn").addEventListener("click", () => {
       localStorage.removeItem("revealChunks");
+      sessionStorage.removeItem(attemptsKey);
       showProgress();
       document.getElementById("feedback").textContent = "Progress reset.";
-    });
-    // HINT helper (paste into the page's <script> area)
-    const attemptsKey = "attempts_" + (location.pathname.split("/").pop().replace(".html","") || "puzzle"); // unique per page
-    const HINT_THRESHOLD = 3; // number of wrong tries before auto-show
-    
-    function getAttempts() {
-      return parseInt(sessionStorage.getItem(attemptsKey) || "0", 10);
-    }
-    function setAttempts(n) {
-      sessionStorage.setItem(attemptsKey, String(n));
-    }
-    function incrementAttempts() {
-      const n = getAttempts() + 1;
-      setAttempts(n);
-      if (n >= HINT_THRESHOLD) showHint();
-      // optional: display attempts in feedback area (uncomment if desired)
-      // document.getElementById("feedback").textContent += `  (attempts: ${n})`;
-    }
-    
-    function showHint() {
-      const btn = document.getElementById("hintBtn");
-      const box = document.getElementById("hintBox");
-      if (!box || !btn) return;
-      box.style.display = "block";
-      btn.textContent = "Hide Hint";
-    }
-    function hideHint() {
-      const btn = document.getElementById("hintBtn");
-      const box = document.getElementById("hintBox");
-      if (!box || !btn) return;
-      box.style.display = "none";
-      btn.textContent = "Show Hint";
-    }
-    
-    document.getElementById("hintBtn").addEventListener("click", () => {
-      const box = document.getElementById("hintBox");
-      if (box.style.display === "none" || !box.style.display) showHint();
-      else hideHint();
     });
 
     showProgress();

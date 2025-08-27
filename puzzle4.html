@@ -2,24 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Puzzle 2</title>
+  <title>Puzzle 4</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Puzzle 2</h1>
+    <h1>Puzzle 4</h1>
 
     <p class="clue">
-And now to the one
-Who likes to run
-His horrible word use is very
-Not fun
-But what we like to say
-When he asks something dumb 
-Is ___
-And he won't press
-So fun!
+Hi, blondie
+I know what you did
+She knows it too
+What you made an accident
+All comes back to you
+Now tell me
+Alas
+What was her name?
+That you murdered that night
+With little
+ to no shame
     </p>
 
     <div class="input-row">
@@ -35,8 +37,8 @@ So fun!
     </div>
     <div id="hintBox" class="reveal" style="display:none; margin-top:8px;">
       <div id="hint-content">
-        <!-- Put your hint text for puzzle 2 here -->
-        It ain't no.
+        <!-- Put your hint text for puzzle 4 here -->
+         If you think you have the wrong spelling, text/call me. Not after 12AM, please.
       </div>
     </div>
 
@@ -49,11 +51,11 @@ So fun!
   </div>
 
   <script>
-    const expectedNormalized = "yes".trim().toLowerCase().replace(/\s+/g, "");
-    const chunk = " 5"; // day
-    const nextPage = "puzzle3.html";
+    const expectedNormalized = "geraldine".trim().toLowerCase().replace(/\s+/g, "");
+    const chunk = "PM, "; // delimiter between time and month
+    const nextPage = "puzzle5.html";
 
-    const attemptsKey = "attempts_puzzle2";
+    const attemptsKey = "attempts_puzzle4";
     const HINT_THRESHOLD = 3;
     function getAttempts(){ return parseInt(sessionStorage.getItem(attemptsKey) || "0", 10); }
     function setAttempts(n){ sessionStorage.setItem(attemptsKey, String(n)); }

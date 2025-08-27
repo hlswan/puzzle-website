@@ -2,24 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Puzzle 2</title>
+  <title>Puzzle 5</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Puzzle 2</h1>
+    <h1>Puzzle 5</h1>
 
     <p class="clue">
-And now to the one
-Who likes to run
-His horrible word use is very
-Not fun
-But what we like to say
-When he asks something dumb 
-Is ___
-And he won't press
-So fun!
+Now for you
+Far away kid
+Here's something you might find fun
+Can you remember the song
+You sang as not one
+In that night in the forest
+Gosh how that changed us
+Too easy? I know
+What's the fifth line?
     </p>
 
     <div class="input-row">
@@ -35,8 +35,8 @@ So fun!
     </div>
     <div id="hintBox" class="reveal" style="display:none; margin-top:8px;">
       <div id="hint-content">
-        <!-- Put your hint text for puzzle 2 here -->
-        It ain't no.
+        <!-- Put your hint text for puzzle 5 here -->
+        The song I am referring to is the 2022 BCR on YT music.
       </div>
     </div>
 
@@ -49,11 +49,11 @@ So fun!
   </div>
 
   <script>
-    const expectedNormalized = "yes".trim().toLowerCase().replace(/\s+/g, "");
-    const chunk = " 5"; // day
-    const nextPage = "puzzle3.html";
+    const expectedNormalized = "moresharing".trim().toLowerCase().replace(/\s+/g, "");
+    const chunk = "07 "; 
+    const nextPage = "puzzle6.html";
 
-    const attemptsKey = "attempts_puzzle2";
+    const attemptsKey = "attempts_puzzle5";
     const HINT_THRESHOLD = 3;
     function getAttempts(){ return parseInt(sessionStorage.getItem(attemptsKey) || "0", 10); }
     function setAttempts(n){ sessionStorage.setItem(attemptsKey, String(n)); }
