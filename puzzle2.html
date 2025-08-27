@@ -26,15 +26,12 @@ Yes, with this name, they would have gone far
     </div>
 
     <div id="feedback" class="feedback small"></div>
-
-    <!-- HINT UI (paste under the feedback div) -->
     <div style="margin-top:10px;">
       <button id="hintBtn" class="small">Show Hint</button>
     </div>
 
     <div id="hintBox" class="reveal" style="display:none; margin-top:8px;">
       <div id="hint-content">
-        <!-- Put your hint text here. Edit this text manually. -->
         Sky, Sol, and _ _ _ a
       </div>
     </div>
@@ -49,7 +46,7 @@ Yes, with this name, they would have gone far
 
   <script>
     const correctHash = "970ec274ca867815174ebe4eff19282000f9495a6c7254e94991d1fb4dc3df30";
-    const chunk = " 5th"; // chunk for puzzle 2
+    const chunk = " 5th"; 
     const nextPage = "puzzle3.html";
 
     async function sha256Hex(message) {
@@ -92,9 +89,9 @@ Yes, with this name, they would have gone far
 
     showProgress();
 
-    // HINT helper (paste into the page's <script> area)
+    
     const attemptsKey = "attempts_" + (location.pathname.split("/").pop().replace(".html","") || "puzzle"); // unique per page
-    const HINT_THRESHOLD = 3; // number of wrong tries before auto-show
+    const HINT_THRESHOLD = 3; 
     
     function getAttempts() {
       return parseInt(sessionStorage.getItem(attemptsKey) || "0", 10);
@@ -106,8 +103,6 @@ Yes, with this name, they would have gone far
       const n = getAttempts() + 1;
       setAttempts(n);
       if (n >= HINT_THRESHOLD) showHint();
-      // optional: display attempts in feedback area (uncomment if desired)
-      // document.getElementById("feedback").textContent += `  (attempts: ${n})`;
     }
     
     function showHint() {

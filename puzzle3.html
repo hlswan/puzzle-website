@@ -27,14 +27,12 @@ We, almost died for that A
 
     <div id="feedback" class="feedback small"></div>
 
-    <!-- HINT UI (paste under the feedback div) -->
     <div style="margin-top:10px;">
       <button id="hintBtn" class="small">Show Hint</button>
     </div>
 
     <div id="hintBox" class="reveal" style="display:none; margin-top:8px;">
       <div id="hint-content">
-        <!-- Put your hint text here. Edit this text manually. -->
         I did text it to you.
       </div>
     </div>
@@ -49,7 +47,7 @@ We, almost died for that A
 
   <script>
     const correctHash = "d6d824abba4afde81129c71dea75b8100e96338da5f416d2f69088f1960cb091";
-    const chunk = "mber"; // chunk for puzzle 3
+    const chunk = "mber";
     const nextPage = "puzzle44.html";
 
     async function sha256Hex(message) {
@@ -73,7 +71,7 @@ We, almost died for that A
       if (h === correctHash) {
         fb.textContent = "✅ Correct! Unlocking next piece...";
         const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
-        if (!arr.includes(chunk)) { // prevent duplicates
+        if (!arr.includes(chunk)) {
           arr.unshift(chunk); 
           localStorage.setItem("revealChunks", JSON.stringify(arr));
         }
