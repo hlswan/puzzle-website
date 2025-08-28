@@ -85,7 +85,7 @@ System.out.println(numbers[0011]);
         if (!arr.includes(chunk)) { arr.unshift(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
         setTimeout(()=> window.location.href = nextPage, 700);
       } else {
-        fb.textContent = "❌ Try again.";
+        fb.textContent = "❌ Try again. Attempts: " + getAttempts();
         incrementAttempts();
       }
       showProgress();
