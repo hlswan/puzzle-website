@@ -11,14 +11,14 @@
     <h1>Puzzle 1</h1>
 
     <p class="clue">
-What time is it?
-
-Some man in the group knows
-Not the engineer
-Nor HeWhoMustNotBeNamed
-But the one who did that thing
-With the reeds
-And the looooong Wednesdays
+It's a <strong>saying</strong> two bands have
+One band at a place in my past
+The other at the place of one of our futures
+No, its not future me
+And it's not a he
+And like how some say I am Loyal
+She is definitely a Ray
+(for this one use the internet)(bolded text might help you in your search ;)
     </p>
 
     <div class="input-row">
@@ -35,15 +35,7 @@ And the looooong Wednesdays
     <div id="hintBox" class="reveal" style="display:none; margin-top:8px;">
       <div id="hint-content">
         <!-- Put your hint text for puzzle 1 here -->
-Not 3:35. Format H:MM.
-It's a <strong>saying</strong> two bands have
-One band at a place in my past
-The other at the place of one of our futures
-No, its not future me
-And it's not a he
-And like how some say I am Loyal
-She is definitely a Ray
-(for this one use the internet)(bolded text might help you in your search ;)
+        The band always wins. H:MM. 
       </div>
     </div>
 
@@ -57,7 +49,7 @@ She is definitely a Ray
 
   <script>
     // Config for this page
-    const expectedNormalized = "8:07".trim().toLowerCase().replace(/\s+/g, "");
+    const expectedNormalized = "8:07".trim().toLowerCase().replace(/\s+/g, "") || "807".trim().toLowerCase().replace(/\s+/g, "");
     const chunk = ", 2025"; // year (revealed first)
     const nextPage = "puzzle2.html";
 
