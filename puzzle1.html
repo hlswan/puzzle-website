@@ -49,7 +49,8 @@ She is definitely a Ray
 
   <script>
     // Config for this page
-    const expectedNormalized = "8:07".trim().toLowerCase().replace(/\s+/g, "") || "807".trim().toLowerCase();
+    const expectedNormalized = "8:07".trim().toLowerCase().replace(/\s+/g, "");
+    const expectedNormalized2 = "807".trim().toLowerCase();
     const chunk = ", 2025"; // year (revealed first)
     const nextPage = "puzzle2.html";
 
@@ -83,7 +84,7 @@ She is definitely a Ray
       const raw = document.getElementById("answer").value || "";
       const norm = normalize(raw);
       const fb = document.getElementById("feedback");
-      if (norm === expectedNormalized) {
+      if (norm === expectedNormalized || norm === expectedNormalized2) {
         fb.textContent = "✅ Correct! Unlocking next piece...";
         const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
         if (!arr.includes(chunk)) { arr.unshift(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
