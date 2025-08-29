@@ -40,6 +40,14 @@ p.clue {
   margin-bottom: 10px;
 }
 
+pre.math{
+      background:#a65ad2;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #eef2ff;
+      overflow:auto;
+}
+
 input[type="text"] {
   flex: 1;
   padding: 10px 12px;
