@@ -126,7 +126,7 @@ f'(D) = B.
       const norm = normalize(raw);
       const fb = document.getElementById("feedback");
       if (norm === expectedNormalized) {
-        fb.textContent = "✅ Correct! Unlocking final piece...";
+        fb.textContent = "✅ Correct! Unlocking final puzzle...";
         const arr = JSON.parse(localStorage.getItem("revealChunks") || "[]");
         if (!arr.includes(chunk)) { arr.unshift(chunk); localStorage.setItem("revealChunks", JSON.stringify(arr)); }
         setTimeout(()=> window.location.href = nextPage, 700);
