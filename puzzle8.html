@@ -2,35 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Puzzle 8 — Sudoku (External libs)</title>
+  <title>Puzzle 8 — Sudoku (External libs, enhanced highlights)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- Use your existing style.css for site-wide styles -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- External libs -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Local override / Sudoku-specific styles (kept small so you don't need to edit style.css) -->
   <style>
     /* Layout */
-    .sudoku-page {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 20px;
-    }
+    .sudoku-page { display: flex; gap: 20px; align-items: flex-start; justify-content: center; padding: 20px; }
     .left-panel { width: 560px; }
     .right-panel { width: 260px; }
 
-    /* Header (timer / errors) */
-    .game-header {
-      display:flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom:10px;
-      color: #e6eef8;
-    }
+    /* Header */
+    .game-header { display:flex; justify-content: space-between; align-items: center; margin-bottom:10px; color: #e6eef8; }
     .status-box { background: rgba(255,255,255,0.02); padding:8px 10px; border-radius:8px; font-weight:600; }
 
     /* Sudoku grid */
@@ -42,7 +26,7 @@
       gap: 0;
       border: 6px solid #111;
       box-sizing: border-box;
-      background: #f8fafc;
+      background: #ffffff;
     }
     .cell {
       position: relative;
@@ -60,16 +44,24 @@
       user-select:none;
     }
     .cell.given { background: #f3f4f6; color: #111; font-weight:800; cursor:default; }
-    .cell.selected { background: #fde68a; } /* highlight */
-    .cell.error { animation: flashError 0.4s; background: #fecaca; }
+    .cell.selected { background: #fde68a; }        /* selected cell */
+    .cell.peer { background: #fff7cc; }            /* same row/col/box */
+    .cell.conflict { background: #fecaca; }        /* incorrect momentary flash (keeps old style) */
+    .cell.same-number { background: #fb923c; color: #fff; } /* other cells already containing the same number */
+
     @keyframes flashError { from { transform: scale(1.02);} to { transform: scale(1);} }
 
-    /* Thicker lines for 3x3 blocks */
-    .cell.col-3, .cell.col-6 { border-right: 3px solid #333; }
-    .cell.col-1, .cell.col-4, .cell.col-7 { /* nothing extra */ }
-    .cell.row-3, .cell.row-6 { border-bottom: 3px solid #333; }
+    /* Thicker boundaries between 3x3 boxes */
+    /* We'll add thicker right borders for columns 3 and 6, and bottom borders for rows 3 and 6 */
+    .cell.col-3, .cell.col-6 { border-right: 4px solid #111; }
+    .cell.col-1 { border-left: 4px solid #111; } /* left outer border */
+    .cell.row-3, .cell.row-6 { border-bottom: 4px solid #111; }
+    .cell.row-1 { border-top: 4px solid #111; } /* top outer border */
 
-    /* Candidate (pencil mark) area: 3x3 mini-grid in each cell */
+    /* Slight alternating shading for 3x3 boxes for clearer reading */
+    .cell.box-shade { background: #fbfbfb; }
+
+    /* Candidate area: 3x3 mini-grid inside each cell */
     .candidates {
       position: absolute;
       inset: 6px;
@@ -80,17 +72,12 @@
       color: #555;
       align-items:center;
       justify-items:center;
-      pointer-events: none; /* clicks handled by .cell */
+      pointer-events: none;
     }
-    .candidate-dot { opacity:1; }
+    .candidate-dot { opacity:1; visibility:hidden; }
 
     /* Right-side controls */
-    .controls {
-      display:flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: stretch;
-    }
+    .controls { display:flex; flex-direction: column; gap: 10px; align-items: stretch; }
     .modes { display:flex; gap:8px; }
     .modes button { flex:1; padding:10px; border-radius:8px; border:none; font-weight:700; cursor:pointer; }
     .modes .active { background:#111; color:#fff; }
@@ -99,22 +86,13 @@
     .action-row { display:flex; gap:8px; margin-top:6px; }
     .action-btn { flex:1; padding:10px; border-radius:8px; cursor:pointer; font-weight:700; }
 
-    /* small */
     .small { font-size:0.9rem; color: rgba(230,238,248,0.85); }
 
-    /* Disabled overlay when locked */
-    .locked-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color: #fff;
-      font-size:20px;
-      z-index: 1000;
-      border-radius:8px;
-    }
+    /* locked overlay when too many errors */
+    .locked-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; color: #fff; font-size:20px; z-index: 1000; border-radius:8px; }
+
+    /* small visual for peer/selected when box shading present */
+    .cell.box-shade.peer { background: #fff3bf; }  /* adjust so peer highlight still visible on shaded boxes */
   </style>
 </head>
 <body>
@@ -168,7 +146,6 @@
 
   <script>
   // ========= Sudoku puzzle & solution (fixed) =========
-  // 0 = empty
   const puzzle = [
     [5,3,0, 0,7,0, 0,0,0],
     [6,0,0, 1,9,5, 0,0,0],
@@ -193,30 +170,21 @@
   ];
 
   // ====== State ======
-  let selected = null; // {r,c}
+  let selected = null; // {r,c,$el}
   let candidateMode = false;
   let errorCount = 0;
   let maxErrors = 3;
   let locked = false;
-  let filledCount = 0; // how many final cells are filled (including givens)
+  let filledCount = 0;
   let timerId = null;
   let startTime = Date.now();
   let undoStack = [];
-
-  // candidates: array 9x9 of Sets
   const candidates = new Array(9).fill(0).map(()=> Array.from({length:9}, ()=> new Set()));
-
-  // current values: start from puzzle (0 means empty)
   const values = puzzle.map(row => row.slice());
 
-  // ====== Helpers ======
   function cellIndex(r,c){ return r*9 + c; }
   function rcFromIndex(i){ return [Math.floor(i/9), i%9]; }
-  function formatTime(s){
-    const mm = Math.floor(s/60).toString();
-    const ss = (s%60).toString().padStart(2,"0");
-    return mm + ":" + ss;
-  }
+  function formatTime(s){ const mm = Math.floor(s/60).toString(); const ss = (s%60).toString().padStart(2,"0"); return mm + ":" + ss; }
 
   // ====== Build UI ======
   function buildGrid(){
@@ -236,27 +204,24 @@
           .addClass("col-" + (c+1))
           .appendTo($grid);
 
+        // apply 3x3 box shading (alternating)
+        const blockRow = Math.floor(r/3), blockCol = Math.floor(c/3);
+        if(((blockRow + blockCol) % 2) === 0) $cell.addClass("box-shade");
+
         if(val !== 0){
           $cell.addClass("given").text(val);
           filledCount++;
         } else {
-          $cell.text(""); // empty
+          $cell.text("");
         }
 
-        // candidates container
         const $cand = $("<div>").addClass("candidates").appendTo($cell);
         for(let n=1;n<=9;n++){
           $("<div>").addClass("candidate-dot").attr("data-n",n).text(n).appendTo($cand);
         }
 
-        // click handler
         $cell.on("click", function(){
           if(locked) return;
-          if($(this).hasClass("given")) {
-            // do not select givens for input but allow selection to show highlight
-            selectCell($(this));
-            return;
-          }
           selectCell($(this));
         });
       }
@@ -265,16 +230,54 @@
     updateErrorsUI();
   }
 
+  // ====== Selection & highlights ======
+  function clearHighlights(){
+    $(".cell").removeClass("selected peer same-number");
+  }
+
+  function highlightPeersAndConflicts(r,c){
+    // highlight row, col, and box as peers
+    $(".cell").removeClass("peer");
+    $(".cell").removeClass("same-number");
+
+    // row
+    $(`.cell[data-r=${r}]`).not(".selected").addClass("peer");
+    // col
+    $(`.cell[data-c=${c}]`).not(".selected").addClass("peer");
+    // box
+    const br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+    for(let rr=br; rr<br+3; rr++){
+      for(let cc=bc; cc<bc+3; cc++){
+        $(`.cell[data-r=${rr}][data-c=${cc}]`).not(".selected").addClass("peer");
+      }
+    }
+
+    // if selected cell has a final numeric value, highlight other cells containing same number
+    const curVal = values[r][c];
+    if(curVal && curVal !== 0){
+      $(`.cell`).filter(function(){
+        const rr = parseInt($(this).attr("data-r")), cc = parseInt($(this).attr("data-c"));
+        // skip the selected cell itself
+        if(rr===r && cc===c) return false;
+        return values[rr][cc] === curVal || puzzle[rr][cc] === curVal;
+      }).addClass("same-number");
+    }
+  }
+
   function selectCell($cell){
+    clearHighlights();
     $(".cell.selected").removeClass("selected");
     $cell.addClass("selected");
     selected = { r: parseInt($cell.attr("data-r")), c: parseInt($cell.attr("data-c")), $el: $cell };
+    // highlight peers/conflicts
+    highlightPeersAndConflicts(selected.r, selected.c);
   }
 
   // ====== Timer ======
   function startTimer(){
     startTime = Date.now();
     $("#timer").text("0:00");
+    if(timerId) clearInterval(timerId);
     timerId = setInterval(()=>{
       const s = Math.floor((Date.now()-startTime)/1000);
       $("#timer").text(formatTime(s));
@@ -282,7 +285,7 @@
   }
   function stopTimer(){ if(timerId) { clearInterval(timerId); timerId = null; } }
 
-  // ====== Error UI / Locking ======
+  // ====== Errors/Locking ======
   function updateErrorsUI(){
     $("#errors").text(errorCount);
     if(errorCount >= maxErrors){
@@ -292,16 +295,13 @@
       stopTimer();
     }
   }
-
   function disableAllControls(){
     $(".numbtn, #eraseBtn, #undoBtn, #btnCandidate, #btnNormal").prop("disabled", true).css("opacity", 0.6);
-    // visually disable cell input
-    // selection should be prevented by locked flag
   }
 
-  // ====== Candidate management ======
+  // ====== Candidates ======
   function toggleCandidate(r,c,n){
-    if(puzzle[r][c] !== 0) return; // do nothing for given
+    if(puzzle[r][c] !== 0) return;
     const set = candidates[r][c];
     if(set.has(n)) set.delete(n);
     else set.add(n);
@@ -317,7 +317,6 @@
       const present = candidates[r][c].has(n);
       $cell.find(`.candidate-dot[data-n=${n}]`).css("visibility", present ? "visible" : "hidden");
     }
-    // If a final value is present, hide candidates
     if(values[r][c] !== 0 || puzzle[r][c] !== 0) $cell.find(".candidates").hide();
     else $cell.find(".candidates").show();
   }
@@ -325,44 +324,30 @@
     for(let r=0;r<9;r++) for(let c=0;c<9;c++) updateCellCandidatesUI(r,c);
   }
 
-  // ====== Place final number (normal mode) ======
+  // ====== Place final number ======
   function placeNumber(r,c,n, recordUndo = true){
     if(locked) return;
-    if(puzzle[r][c] !== 0) return; // cannot change given
-    // record previous for undo
+    if(puzzle[r][c] !== 0) return;
     if(recordUndo){
-      undoStack.push({
-        r,c,
-        prevVal: values[r][c],
-        prevCandidates: new Set([...candidates[r][c]])
-      });
-      // cap undo stack (optional)
+      undoStack.push({ r,c, prevVal: values[r][c], prevCandidates: new Set([...candidates[r][c]]) });
       if(undoStack.length > 200) undoStack.shift();
     }
-
-    // clear candidates if any
     clearCandidates(r,c);
-
-    // check solution
     if(solution[r][c] === n){
       values[r][c] = n;
       const $cell = $(`.cell[data-r=${r}][data-c=${c}]`);
       $cell.text(n).addClass("filled").css("color", "#0f172a");
       filledCount++;
-      // check completion
-      if(filledCount === 81){
-        // solved
-        onSolved();
-      }
+      // update highlights so same-number highlights show up correctly
+      highlightPeersAndConflicts(r,c);
+      if(filledCount === 81) onSolved();
       return true;
     } else {
-      // wrong
       errorCount++;
       updateErrorsUI();
-      // brief red flash
       const $cell = $(`.cell[data-r=${r}][data-c=${c}]`);
-      $cell.addClass("error");
-      setTimeout(()=> $cell.removeClass("error"), 300);
+      $cell.addClass("conflict");
+      setTimeout(()=> $cell.removeClass("conflict"), 350);
       return false;
     }
   }
@@ -380,8 +365,9 @@
       $cell.text("");
       filledCount = Math.max(0, filledCount - 1);
       updateCellCandidatesUI(r,c);
+      // refresh highlights
+      if(selected) highlightPeersAndConflicts(selected.r, selected.c);
     } else {
-      // if empty final, clear candidates
       if(candidates[r][c].size > 0){
         if(recordUndo){
           undoStack.push({ r,c, prevVal: 0, prevCandidates: new Set([...candidates[r][c]]) });
@@ -397,7 +383,6 @@
     const move = undoStack.pop();
     if(!move) return;
     const {r,c, prevVal, prevCandidates} = move;
-    // restore
     const currentVal = values[r][c];
     if(currentVal !== 0 && prevVal === 0) filledCount = Math.max(0, filledCount - 1);
     if(currentVal === 0 && prevVal !== 0) filledCount++;
@@ -406,6 +391,7 @@
     const $cell = $(`.cell[data-r=${r}][data-c=${c}]`);
     $cell.text(prevVal === 0 ? "" : prevVal);
     updateCellCandidatesUI(r,c);
+    if(selected) highlightPeersAndConflicts(selected.r, selected.c);
   }
 
   // ====== Input handlers ======
@@ -413,78 +399,80 @@
     if(locked) return;
     if(!selected) return;
     const r = selected.r, c = selected.c;
-    if(puzzle[r][c] !== 0) return; // given
+    if(puzzle[r][c] !== 0) return;
     if(candidateMode){
-      // toggle candidate
       toggleCandidate(r,c,n);
     } else {
-      // normal placement
-      const ok = placeNumber(r,c,n);
-      if(!ok) {
-        // wrong -> nothing else
-      } else {
-        // correct -> update UI
-      }
+      placeNumber(r,c,n);
     }
   }
-
   function onEraseClicked(){
     if(locked) return;
     if(!selected) return;
     const r = selected.r, c = selected.c;
     eraseCell(r,c);
   }
-
   function onCellKeyboardInput(e){
     if(locked) return;
     if(!selected) return;
     const key = e.key;
-    if(key >= '1' && key <= '9'){
-      onNumberClicked(parseInt(key));
-    } else if(key === 'Backspace' || key === '0'){
-      onEraseClicked();
-    } else if(key.toLowerCase() === 'c'){
-      toggleCandidateMode();
-    } else if(key.toLowerCase() === 'u'){
-      undo();
-    }
+    if(key >= '1' && key <= '9') onNumberClicked(parseInt(key));
+    else if(key === 'Backspace' || key === '0') onEraseClicked();
+    else if(key.toLowerCase() === 'c') toggleCandidateMode();
+    else if(key.toLowerCase() === 'u') undo();
+  }
+
+  function toggleCandidateMode(){
+    candidateMode = !candidateMode;
+    if(candidateMode){ $("#btnCandidate").addClass("active"); $("#btnNormal").removeClass("active"); }
+    else { $("#btnNormal").addClass("active"); $("#btnCandidate").removeClass("active"); }
   }
 
   // ====== Completion handler ======
   function onSolved(){
     stopTimer();
-    // small success animation or message could be added
-    // redirect to complete.html after a tiny delay
+    // small highlight all cells to show success
+    $(".cell").css("box-shadow", "0 0 0 4px rgba(34,197,94,0.12)");
     setTimeout(()=> { window.location.href = "complete.html"; }, 800);
   }
 
-  // ====== Setup listeners ======
+  // ====== Extra helpful UI: hover on number highlights cells already containing that number =====
+  $(document).on("mouseenter", ".numbtn", function(){
+    const n = parseInt($(this).attr("data-val"));
+    $(".cell.same-number").removeClass("same-number");
+    $(".cell").filter(function(){
+      const rr = parseInt($(this).attr("data-r")), cc = parseInt($(this).attr("data-c"));
+      return values[rr][cc] === n || puzzle[rr][cc] === n;
+    }).addClass("same-number");
+  });
+  $(document).on("mouseleave", ".numbtn", function(){
+    // restore highlight for selected cell's same-number (if any)
+    $(".cell.same-number").removeClass("same-number");
+    if(selected){
+      highlightPeersAndConflicts(selected.r, selected.c);
+    }
+  });
+
+  // ====== Setup listeners & init ======
   $(function(){
     buildGrid();
     startTimer();
 
-    // select first empty cell by default
     const $firstEmpty = $(".cell").not(".given").first();
     if($firstEmpty.length) selectCell($firstEmpty);
 
-    // mode toggle
     $("#btnNormal").on("click", function(){ candidateMode = false; $("#btnNormal").addClass("active"); $("#btnCandidate").removeClass("active"); });
     $("#btnCandidate").on("click", function(){ candidateMode = true; $("#btnCandidate").addClass("active"); $("#btnNormal").removeClass("active"); });
 
-    // number pad
     $(".numbtn").on("click", function(){
       const n = parseInt($(this).attr("data-val"));
       onNumberClicked(n);
     });
 
-    // erase / undo
     $("#eraseBtn").on("click", onEraseClicked);
     $("#undoBtn").on("click", undo);
 
-    // cell click selects cell (already wired in buildGrid); enable keyboard too
     $(document).on("keydown", onCellKeyboardInput);
-
-    // update candidate visuals for all
     updateAllCandidatesUI();
   });
   </script>
