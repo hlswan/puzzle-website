@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Puzzle 8 — Sudoku (External libs, enhanced highlights)</title>
+  <title>Puzzle 8 — Sudoku (External libs, enhanced, bugfix)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -45,21 +45,22 @@
     }
     .cell.given { background: #f3f4f6; color: #111; font-weight:800; cursor:default; }
     .cell.selected { background: #fde68a; }        /* selected cell */
-    .cell.peer { background: #fff7cc; }            /* same row/col/box */
-    .cell.conflict { background: #fecaca; }        /* incorrect momentary flash (keeps old style) */
-    .cell.same-number { background: #fb923c; color: #fff; } /* other cells already containing the same number */
+    .cell.peer { background: #fff7cc; }            /* same row/col/box as selected */
+    .cell.conflict { background: #fecaca; }        /* incorrect flash */
+    .cell.same-number { background: #fb923c; color: #fff; } /* same final number (selection-based) */
+    .cell.hover-same { background: #fbbf24; color: #fff; }  /* hover-based highlight (cleared separately) */
 
     @keyframes flashError { from { transform: scale(1.02);} to { transform: scale(1);} }
 
     /* Thicker boundaries between 3x3 boxes */
-    /* We'll add thicker right borders for columns 3 and 6, and bottom borders for rows 3 and 6 */
     .cell.col-3, .cell.col-6 { border-right: 4px solid #111; }
     .cell.col-1 { border-left: 4px solid #111; } /* left outer border */
     .cell.row-3, .cell.row-6 { border-bottom: 4px solid #111; }
     .cell.row-1 { border-top: 4px solid #111; } /* top outer border */
 
-    /* Slight alternating shading for 3x3 boxes for clearer reading */
+    /* Slight alternating shading for 3x3 boxes */
     .cell.box-shade { background: #fbfbfb; }
+    .cell.box-shade.peer { background: #fff3bf; }  /* keep peer highlight visible on shaded boxes */
 
     /* Candidate area: 3x3 mini-grid inside each cell */
     .candidates {
@@ -91,8 +92,6 @@
     /* locked overlay when too many errors */
     .locked-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; color: #fff; font-size:20px; z-index: 1000; border-radius:8px; }
 
-    /* small visual for peer/selected when box shading present */
-    .cell.box-shade.peer { background: #fff3bf; }  /* adjust so peer highlight still visible on shaded boxes */
   </style>
 </head>
 <body>
@@ -145,17 +144,18 @@
   </div>
 
   <script>
-  // ========= Sudoku puzzle & solution (fixed) =========
+  // ========= Easier Sudoku puzzle & solution (fixed) =========
+  // I made the puzzle easier by providing the full first three rows as givens.
   const puzzle = [
-    [5,3,0, 0,7,0, 0,0,0],
-    [6,0,0, 1,9,5, 0,0,0],
-    [0,9,8, 0,0,0, 0,6,0],
-    [8,0,0, 0,6,0, 0,0,3],
-    [4,0,0, 8,0,3, 0,0,1],
-    [7,0,0, 0,2,0, 0,0,6],
-    [0,6,0, 0,0,0, 2,8,0],
-    [0,0,0, 4,1,9, 0,0,5],
-    [0,0,0, 0,8,0, 0,7,9]
+    [5,3,4,6,7,8,9,1,2],  // full row given
+    [6,7,2,1,9,5,3,4,8],  // full row given
+    [1,9,8,3,4,2,5,6,7],  // full row given
+    [8,0,0,0,6,0,0,0,3],
+    [4,0,0,8,0,3,0,0,1],
+    [7,0,0,0,2,0,0,0,6],
+    [0,6,0,0,0,0,2,8,0],
+    [0,0,0,4,1,9,0,0,5],
+    [0,0,0,0,8,0,0,7,9]
   ];
   const solution = [
     [5,3,4,6,7,8,9,1,2],
@@ -180,7 +180,7 @@
   let startTime = Date.now();
   let undoStack = [];
   const candidates = new Array(9).fill(0).map(()=> Array.from({length:9}, ()=> new Set()));
-  const values = puzzle.map(row => row.slice());
+  const values = puzzle.map(row => row.slice()); // current filled values (givens included)
 
   function cellIndex(r,c){ return r*9 + c; }
   function rcFromIndex(i){ return [Math.floor(i/9), i%9]; }
@@ -230,15 +230,14 @@
     updateErrorsUI();
   }
 
-  // ====== Selection & highlights ======
+  // ====== Selection & highlights (CLEAR both hover & previous same-number before applying) ======
   function clearHighlights(){
-    $(".cell").removeClass("selected peer same-number");
+    $(".cell").removeClass("selected peer same-number hover-same");
   }
 
   function highlightPeersAndConflicts(r,c){
-    // highlight row, col, and box as peers
-    $(".cell").removeClass("peer");
-    $(".cell").removeClass("same-number");
+    // remove existing peer & same-number but keep hover-same only if it's currently used (hover handled separately)
+    $(".cell").removeClass("peer same-number");
 
     // row
     $(`.cell[data-r=${r}]`).not(".selected").addClass("peer");
@@ -252,12 +251,11 @@
       }
     }
 
-    // if selected cell has a final numeric value, highlight other cells containing same number
+    // highlight other final-valued cells that contain the same number as selection (selection-based)
     const curVal = values[r][c];
     if(curVal && curVal !== 0){
       $(`.cell`).filter(function(){
         const rr = parseInt($(this).attr("data-r")), cc = parseInt($(this).attr("data-c"));
-        // skip the selected cell itself
         if(rr===r && cc===c) return false;
         return values[rr][cc] === curVal || puzzle[rr][cc] === curVal;
       }).addClass("same-number");
@@ -265,11 +263,13 @@
   }
 
   function selectCell($cell){
-    clearHighlights();
+    // clear hover highlights before applying selection to avoid stuck hover-class
+    $(".cell.hover-same").removeClass("hover-same");
+    $(".cell.same-number").removeClass("same-number");
+
     $(".cell.selected").removeClass("selected");
     $cell.addClass("selected");
     selected = { r: parseInt($cell.attr("data-r")), c: parseInt($cell.attr("data-c")), $el: $cell };
-    // highlight peers/conflicts
     highlightPeersAndConflicts(selected.r, selected.c);
   }
 
@@ -334,12 +334,13 @@
     }
     clearCandidates(r,c);
     if(solution[r][c] === n){
+      const wasEmpty = values[r][c] === 0;
       values[r][c] = n;
       const $cell = $(`.cell[data-r=${r}][data-c=${c}]`);
       $cell.text(n).addClass("filled").css("color", "#0f172a");
-      filledCount++;
-      // update highlights so same-number highlights show up correctly
-      highlightPeersAndConflicts(r,c);
+      if(wasEmpty) filledCount++;
+      // refresh highlights
+      if(selected) highlightPeersAndConflicts(selected.r, selected.c);
       if(filledCount === 81) onSolved();
       return true;
     } else {
@@ -365,7 +366,6 @@
       $cell.text("");
       filledCount = Math.max(0, filledCount - 1);
       updateCellCandidatesUI(r,c);
-      // refresh highlights
       if(selected) highlightPeersAndConflicts(selected.r, selected.c);
     } else {
       if(candidates[r][c].size > 0){
@@ -431,23 +431,23 @@
   // ====== Completion handler ======
   function onSolved(){
     stopTimer();
-    // small highlight all cells to show success
     $(".cell").css("box-shadow", "0 0 0 4px rgba(34,197,94,0.12)");
     setTimeout(()=> { window.location.href = "complete.html"; }, 800);
   }
 
-  // ====== Extra helpful UI: hover on number highlights cells already containing that number =====
+  // ====== Hover highlights (use separate class hover-same so selection-based same-number isn't removed) ======
   $(document).on("mouseenter", ".numbtn", function(){
     const n = parseInt($(this).attr("data-val"));
-    $(".cell.same-number").removeClass("same-number");
+    // remove any previous hover-same first
+    $(".cell.hover-same").removeClass("hover-same");
     $(".cell").filter(function(){
       const rr = parseInt($(this).attr("data-r")), cc = parseInt($(this).attr("data-c"));
       return values[rr][cc] === n || puzzle[rr][cc] === n;
-    }).addClass("same-number");
+    }).addClass("hover-same");
   });
   $(document).on("mouseleave", ".numbtn", function(){
-    // restore highlight for selected cell's same-number (if any)
-    $(".cell.same-number").removeClass("same-number");
+    $(".cell.hover-same").removeClass("hover-same");
+    // re-apply selection-based same-number if a cell is selected
     if(selected){
       highlightPeersAndConflicts(selected.r, selected.c);
     }
@@ -458,19 +458,31 @@
     buildGrid();
     startTimer();
 
+    // select first empty cell or first cell
     const $firstEmpty = $(".cell").not(".given").first();
     if($firstEmpty.length) selectCell($firstEmpty);
+    else selectCell($(".cell").first());
 
     $("#btnNormal").on("click", function(){ candidateMode = false; $("#btnNormal").addClass("active"); $("#btnCandidate").removeClass("active"); });
     $("#btnCandidate").on("click", function(){ candidateMode = true; $("#btnCandidate").addClass("active"); $("#btnNormal").removeClass("active"); });
 
     $(".numbtn").on("click", function(){
       const n = parseInt($(this).attr("data-val"));
+      // clear any hover highlight before placing number (prevents stuck hover)
+      $(".cell.hover-same").removeClass("hover-same");
       onNumberClicked(n);
+      // re-highlight peers/same-number for the selected cell
+      if(selected) highlightPeersAndConflicts(selected.r, selected.c);
     });
 
-    $("#eraseBtn").on("click", onEraseClicked);
-    $("#undoBtn").on("click", undo);
+    $("#eraseBtn").on("click", function(){
+      $(".cell.hover-same").removeClass("hover-same");
+      onEraseClicked();
+    });
+    $("#undoBtn").on("click", function(){
+      $(".cell.hover-same").removeClass("hover-same");
+      undo();
+    });
 
     $(document).on("keydown", onCellKeyboardInput);
     updateAllCandidatesUI();
