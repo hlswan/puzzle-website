@@ -15,12 +15,16 @@ Ahhhh now looky here,
 You'll need a smart one I fear
 For only he knows
 What happens if (oh dear!)
-int a = 0010;
-int b = 0011;
-int i = a * b - (a+b);
-int[] numbers = new int[i];
-numbers[0011] = 0101;
-System.out.println(numbers[0011]);
+class Main {
+    public static void main(String[] args) {
+      int a = 2;
+      int b = 3;
+      int i = a * b - (a+b);
+      int[] numbers = new int[i];
+      numbers[3] = 5;
+      System.out.println(numbers[3]);
+    }
+}
     </p>
 
     <div class="input-row">
@@ -37,7 +41,7 @@ System.out.println(numbers[0011]);
     <div id="hintBox" class="reveal" style="display:none; margin-top:8px;">
       <div id="hint-content">
         <!-- Put your hint text for puzzle 6 here -->
-        The numbers are in binary. You are entering what prints, or the name of the exception.
+        You are entering what prints, or the name of the exception.
       </div>
     </div>
 
